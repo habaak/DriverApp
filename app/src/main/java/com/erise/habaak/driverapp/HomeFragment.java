@@ -81,6 +81,13 @@ public class HomeFragment extends Fragment {
     private TimerTask timerTempHumiTask;
     private TimerTask speedTask;
     private TimerTask locationTask;
+    private TimerTask engineLoadValueTask;
+    private TimerTask engineCoolantTemperatureTask;
+    private TimerTask enginRPMTask;
+    private TimerTask vehicleSpeedTask;
+    private TimerTask MAFTask;
+    private TimerTask throttlePositionTask;
+
     private Timer timer;
 
     private LatLonSender latLonSender;
@@ -130,13 +137,49 @@ public class HomeFragment extends Fragment {
                 }
             };
 
-           speedTask = new TimerTask() {
+            speedTask = new TimerTask() {
                 @Override
                 public void run() {
                     server.sendSpeed();
                 }
             };
 
+            engineLoadValueTask = new TimerTask() {
+                @Override
+                public void run() {
+                    server.sendCanData("engineLoadValue");
+                }
+            };
+            engineCoolantTemperatureTask = new TimerTask() {
+                @Override
+                public void run() {
+                    server.sendCanData("engineCoolantTemperature");
+                }
+            };
+            enginRPMTask = new TimerTask() {
+                @Override
+                public void run() {
+                    server.sendCanData("enginRPM");
+                }
+            };
+            vehicleSpeedTask = new TimerTask() {
+                @Override
+                public void run() {
+                    server.sendCanData("vehicleSpeed");
+                }
+            };
+            MAFTask = new TimerTask() {
+                @Override
+                public void run() {
+                    server.sendCanData("MAF");
+                }
+            };
+            throttlePositionTask = new TimerTask() {
+                @Override
+                public void run() {
+                    server.sendCanData("throttlePosition");
+                }
+            };
             locationTask = new TimerTask() {
                 @Override
                 public void run() {
@@ -145,10 +188,18 @@ public class HomeFragment extends Fragment {
             };
 
 
+
             timer = new Timer();
-            timer.schedule(timerTempHumiTask,0,5000);
-            timer.schedule(speedTask,0,3000);
-            timer.schedule(locationTask,0,3000);
+            //timer.schedule(timerTempHumiTask,0,5000);
+            //timer.schedule(speedTask,0,3000);
+            timer.schedule(engineLoadValueTask,0,500);
+            timer.schedule(engineCoolantTemperatureTask,0,10000);
+            /*timer.schedule(enginRPMTask,0,10000);
+            timer.schedule(vehicleSpeedTask,0,11000);
+            timer.schedule(MAFTask,0,12000);
+            timer.schedule(throttlePositionTask,0,13000);
+            timer.schedule(locationTask,0,3000);*/
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -230,7 +281,7 @@ public class HomeFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-//Recycle item
+    //Recycle item
     public class Recycler_item {
         int image;
         String title;
@@ -248,7 +299,7 @@ public class HomeFragment extends Fragment {
     }
 
 
-//  TCP IP Server
+    //  TCP IP Server
 /*
     온도
 */
@@ -349,15 +400,19 @@ public class HomeFragment extends Fragment {
                             StringTokenizer st = new StringTokenizer(str, " ");
                             String[] tokenBox = new String[10];
                             for( int x = 0; st.hasMoreElements(); x++ ){
-                               //Log.i("[Token]" , x + " : " + st.nextToken() );
-                               tokenBox[x]=st.nextToken();
+                                //Log.i("[Token]" , x + " : " + st.nextToken() );
+                                tokenBox[x]=st.nextToken();
                                 Log.i("[Receive MSG array]",tokenBox[x]);
                             }
 
                             Log.i("[Token]",tokenBox[1] +":"+tokenBox[3]);
+
                             setTempView(tokenBox[1],tokenBox[3]); //화면 온도 변화
                             latLonSender = (LatLonSender) new LatLonSender().execute(url+"relocation.do",lat,lon);
+                            //HTTP
                             SendTempHumiHttp sendTempHumiHttp = (SendTempHumiHttp) new  SendTempHumiHttp().execute(tokenBox[1],tokenBox[3]);
+
+
                         }
                     }
 
@@ -409,12 +464,17 @@ public class HomeFragment extends Fragment {
         public void sendSpeed(){
             Log.i("[SPEED]","send");
             SpeedSender sender = new SpeedSender();
-            //sender.setMsg(msg);
+            sender.start();
+        }
+        public void sendCanData(String msg) {
+            Log.d("[CAN DATA]",msg);
+            CanDataSender sender = new CanDataSender();
+            sender.setCanMsg(msg);
             sender.start();
         }
         //Send Message All Clients
 
-//온습도 sender
+        //온습도 sender
         class TempHumiSender extends Thread{
             /*String msg;
             public void setMsg(String msg) {
@@ -426,7 +486,7 @@ public class HomeFragment extends Fragment {
                 try {
                     if(!list.isEmpty() && list.size()>=0) {
                         for(DataOutputStream dos : list) {
-                            dos.writeUTF("t");
+                            dos.writeUTF("H&T");
                         }
                     }
                 } catch (Exception e) {
@@ -434,7 +494,7 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
-//속도 sender
+        //속도 sender
         class SpeedSender extends Thread{
             /*String msg;
             public void setMsg(String msg) {
@@ -454,14 +514,35 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
+        //CAN DATA
+        class CanDataSender extends Thread{
+            String msg;
+            public void setCanMsg(String msg) {
+                this.msg = msg;
+            }
 
+            @Override
+            public void run() {
+                try {
+                    if(!list.isEmpty() && list.size()>=0) {
+                        for(DataOutputStream dos : list) {
+                            dos.writeUTF(msg);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
         public void stopServer() {
             rflag = false;
         }
 
     }
-//LAT, LON
+
+
+    //LAT, LON
     private void startLocationService() {
 
         manager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
@@ -607,44 +688,44 @@ public class HomeFragment extends Fragment {
             return null;
         }
     }*/
-    class SendTempHumiHttp extends AsyncTask<String,Void,Void> {
-        String surl = "http://192.168.0.24/first/admin/retemp.do?";
+class SendTempHumiHttp extends AsyncTask<String,Void,Void> {
+    String surl = "http://192.168.0.24/first/admin/retemp.do?";
 
-        String tempNum;
-        String HumidNum;
-        HttpURLConnection urlConn;
-        URL url;
-        public SendTempHumiHttp(){}
-        public SendTempHumiHttp(String tempNum, String HumidNum){
-            HumidNum = this.HumidNum;
-            tempNum = this.tempNum;
+    String tempNum;
+    String HumidNum;
+    HttpURLConnection urlConn;
+    URL url;
+    public SendTempHumiHttp(){}
+    public SendTempHumiHttp(String tempNum, String HumidNum){
+        HumidNum = this.HumidNum;
+        tempNum = this.tempNum;
 
-        }
+    }
 
-        @Override
-        protected Void doInBackground(String... params) {
+    @Override
+    protected Void doInBackground(String... params) {
+        try {
+            String surl = "http://192.168.0.24/first/admin/retemp.do?";
+            StringBuffer buffer = new StringBuffer();
+            buffer.append(surl);
+            buffer.append("temp").append("=").append(params[0]).append("&");
+            buffer.append("humid").append("=").append(params[1]).append("&");
+            buffer.append("busidx").append("=").append("5");
+            surl = buffer.toString();
+            Log.i("[URL-retemp]",surl);
             try {
-                String surl = "http://192.168.0.24/first/admin/retemp.do?";
-                StringBuffer buffer = new StringBuffer();
-                buffer.append(surl);
-                buffer.append("temp").append("=").append(params[0]).append("&");
-                buffer.append("humid").append("=").append(params[1]).append("&");
-                buffer.append("busidx").append("=").append("5");
-                surl = buffer.toString();
-                Log.i("[URL-retemp]",surl);
-                try {
-                    url = new URL(surl);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                urlConn = (HttpURLConnection) url.openConnection();
-                urlConn.getResponseCode();
-            } catch (IOException e) {
+                url = new URL(surl);
+            } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
-            return null;
+            urlConn = (HttpURLConnection) url.openConnection();
+            urlConn.getResponseCode();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return null;
     }
+}
    /* class SendTempHumiHttp extends AsyncTask<String,Void,Void>{
         String surl = "http://192.168.0.24/first/admin/retemp.do?humid=&busidx=5&temp=";
         URL url;

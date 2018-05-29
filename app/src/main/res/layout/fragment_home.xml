@@ -18,18 +18,38 @@
             android:layout_weight="3"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/temp"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="온도"
-                android:textSize="30dp" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/humi"
+                <TextView
+                    android:id="@+id/temp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="온도"
+                    android:textSize="50dp" />
+
+                <TextView
+                    android:id="@+id/humi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="습도"
+                    android:textSize="50dp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnSendTest"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="습도" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#951f34"
+                android:onClick="onClickTest"
+                android:text="Button" />
         </LinearLayout>
 
         <LinearLayout
@@ -40,8 +60,9 @@
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center" />
         </LinearLayout>
 
         <LinearLayout
@@ -50,18 +71,28 @@
             android:layout_weight="3"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/button"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Button" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="속도"
+                    android:textSize="75dp" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/button2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="#555a54"
                 android:text="Button" />
         </LinearLayout>
     </LinearLayout>
