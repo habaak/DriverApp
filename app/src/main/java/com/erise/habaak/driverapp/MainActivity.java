@@ -7,28 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
-
-
-import com.erise.habaak.driverapp.R;
-import com.erise.habaak.driverapp.RecyclerAdapter;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 

@@ -75,7 +75,6 @@ public class HomeFragment extends Fragment {
     private TextView tempView;
     private TextView humiView;
 
-    private TextView mTextMessage;
     String lon, lat;
 
     private TimerTask timerTempHumiTask;
@@ -137,12 +136,12 @@ public class HomeFragment extends Fragment {
                 }
             };
 
-            speedTask = new TimerTask() {
+            /*speedTask = new TimerTask() {
                 @Override
                 public void run() {
                     server.sendSpeed();
                 }
-            };
+            };*/
 
             engineLoadValueTask = new TimerTask() {
                 @Override
@@ -190,15 +189,15 @@ public class HomeFragment extends Fragment {
 
 
             timer = new Timer();
-            //timer.schedule(timerTempHumiTask,0,5000);
+            timer.schedule(timerTempHumiTask,0,5000);
             //timer.schedule(speedTask,0,3000);
-            timer.schedule(engineLoadValueTask,0,500);
-            timer.schedule(engineCoolantTemperatureTask,0,10000);
-            /*timer.schedule(enginRPMTask,0,10000);
-            timer.schedule(vehicleSpeedTask,0,11000);
-            timer.schedule(MAFTask,0,12000);
-            timer.schedule(throttlePositionTask,0,13000);
-            timer.schedule(locationTask,0,3000);*/
+            timer.schedule(engineLoadValueTask,0,15000);
+            timer.schedule(engineCoolantTemperatureTask,0,15500);
+            timer.schedule(enginRPMTask,0,16000);
+            timer.schedule(vehicleSpeedTask,0,16500);
+            timer.schedule(MAFTask,0,17000);
+            timer.schedule(throttlePositionTask,0,17500);
+            timer.schedule(locationTask,0,5000);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -247,6 +246,10 @@ public class HomeFragment extends Fragment {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
+    }
+
+    public void cardViewUpdate(){
+
     }
 
     /*@Override
@@ -356,6 +359,10 @@ public class HomeFragment extends Fragment {
                     Log.i("[Server]","Ready Accept");
                     Socket socket = serverSocket.accept();
                     String client = socket.getInetAddress().getHostAddress();
+                    String clientHostName = socket.getInetAddress().getHostName();
+                    Log.i("[Client]",client);
+                    Log.i("[clientHostName]",socket.getInetAddress().toString());
+
                     new Receiver(socket).start();
                     //new Sender();
                 }
@@ -381,7 +388,7 @@ public class HomeFragment extends Fragment {
                     list.add(dos);
                     Log.d("[Server]","Connected Count : "+list.size());
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
+                    // TODO Auto-generated catch block2
                     e.printStackTrace();
                 }
             }
@@ -394,6 +401,10 @@ public class HomeFragment extends Fragment {
                     while(rflag) {
                         if(socket.isConnected() && dis != null & dis.available() > 0) {
                             String str = dis.readUTF();
+                            String tempData="";
+                            String humiData="";
+                            String busAndDriverInfo="";
+
                             Log.i("[Receive MSG]",str);
                             //조건문으로 통신 값 분류
 
@@ -408,9 +419,28 @@ public class HomeFragment extends Fragment {
                             Log.i("[Token]",tokenBox[1] +":"+tokenBox[3]);
 
                             setTempView(tokenBox[1],tokenBox[3]); //화면 온도 변화
-                            latLonSender = (LatLonSender) new LatLonSender().execute(url+"relocation.do",lat,lon);
+                            //latLonSender = (LatLonSender) new LatLonSender().execute(url+"relocation.do",lat,lon);
                             //HTTP
-                            SendTempHumiHttp sendTempHumiHttp = (SendTempHumiHttp) new  SendTempHumiHttp().execute(tokenBox[1],tokenBox[3]);
+                            if(tokenBox[0].equals("Humidity")){
+                                tempData = tokenBox[1];
+                                humiData = tokenBox[3];
+                                SendTempHumiHttp sendTempHumiHttp = (SendTempHumiHttp) new  SendTempHumiHttp().execute(tokenBox[1],tokenBox[3]);
+                            }
+//client tcp req
+                            else if(tokenBox[0].equals("Client")){
+                                switch (tokenBox[1]){
+                                    case "conn":
+                                        sendToUser(busAndDriverInfo);
+                                        break;
+                                    case "bell":
+                                        sendCanData("bell");
+                                        break;
+                                }
+                            }
+                            else{
+                                //SendTempHumiHttp sendTempHumiHttp = (SendTempHumiHttp) new  SendTempHumiHttp().execute(tokenBox[1],tokenBox[3]);
+                            }
+
 
 
                         }
@@ -454,15 +484,23 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
+//SEND BUS AND DRIVER INFO TO PASSENGER
+        public void sendToUser(String msg){
+            Log.i("[BUS&DRIVER INFO]","BUS&DRIVER INFO Sending...");
+            BusAndDriverInfoSender sender = new BusAndDriverInfoSender();
+            sender.setMsg(msg);
+            sender.start();
+        }
+//SEND CAN REQ
         public void sendTempHumi() {
-            Log.i("[TEMPELATURE]","send");
+            Log.i("[TEMPELATURE]","TEMPELATURE Sending...");
             TempHumiSender sender = new TempHumiSender();
             //sender.setMsg(msg);
             sender.start();
         }
 
         public void sendSpeed(){
-            Log.i("[SPEED]","send");
+            Log.i("[SPEED]","SPEED Sending...");
             SpeedSender sender = new SpeedSender();
             sender.start();
         }
@@ -475,6 +513,26 @@ public class HomeFragment extends Fragment {
         //Send Message All Clients
 
         //온습도 sender
+        class BusAndDriverInfoSender extends Thread{
+            String msg;
+            public void setMsg(String msg) {
+                this.msg = msg;
+            }
+
+            @Override
+            public void run() {
+                try {
+                    if(!list.isEmpty() && list.size()>=0) {
+                        for(DataOutputStream dos : list) {
+                            dos.writeUTF(msg);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         class TempHumiSender extends Thread{
             /*String msg;
             public void setMsg(String msg) {
@@ -640,7 +698,7 @@ public class HomeFragment extends Fragment {
 
         }
     }
-}
+    }
 
 
 
